@@ -31,6 +31,7 @@ var md = markdownit({
 var hashto;
 
 function update(e) {
+    saveInBrowser();
     setOutput(e.getValue());
 
     //If a title is added to the document it will be the new document.title, otherwise use default
@@ -60,16 +61,16 @@ User: @austinmm
 var render_tasklist = function(str){
     // Checked task-list box match
 	if(str.match(/<li>\[x\]\s+\w+/gi)){
-        str = str.replace(/(<li)(>\[x\]\s+)(\w+)/gi, 
-          `$1 style="list-style-type: none;"><input type="checkbox" 
-          checked style="list-style-type: none; 
+        str = str.replace(/(<li)(>\[x\]\s+)(\w+)/gi,
+          `$1 style="list-style-type: none;"><input type="checkbox"
+          checked style="list-style-type: none;
           margin: 0 0.2em 0 -1.3em;" disabled> $3`);
     }
     // Unchecked task-list box match
     if (str.match(/<li>\[ \]\s+\w+/gi)){
-        str = str.replace(/(<li)(>\[ \]\s+)(\w+)/gi, 
-          `$1 style="list-style-type: none;"><input type="checkbox" 
-            style="list-style-type: none; 
+        str = str.replace(/(<li)(>\[ \]\s+)(\w+)/gi,
+          `$1 style="list-style-type: none;"><input type="checkbox"
+            style="list-style-type: none;
             margin: 0 0.2em 0 -1.3em;" disabled> $3`);
     }
     return str
@@ -163,6 +164,34 @@ document.addEventListener('drop', function(e) {
     reader.readAsText(e.dataTransfer.files[0]);
 }, false);
 
+document.getElementById('openbutton').addEventListener('click', function(){
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('savebutton').addEventListener('click', function(){
+  showMenu();
+});
+
+document.getElementById('browsersavebutton').addEventListener('click', function(){
+  saveInBrowser();
+});
+
+document.getElementById('sharebutton').addEventListener('click', function(){
+  updateHash();
+});
+
+document.getElementById('nightbutton').addEventListener('click', function(){
+  toggleNightMode(this);
+});
+
+document.getElementById('readbutton').addEventListener('click', function(){
+  toggleReadMode(this);
+});
+
+document.getElementById('spellbutton').addEventListener('click', function(){
+  toggleSpellCheck(this);
+});
+
 //Print the document named as the document title encoded to avoid strange chars and spaces
 function saveAsMarkdown() {
     save(editor.getValue(), document.title.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/\s]/gi, '') + ".md");
@@ -238,7 +267,7 @@ document.getElementById('close-menu').addEventListener('click', function() {
 
 document.addEventListener('keydown', function(e) {
     if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
-        if ( localStorage.getItem('content') == editor.getValue() ) {
+        if ( localStorage.getItem('editor.content') == editor.getValue() ) {
             e.preventDefault();
             return false;
         }
@@ -262,24 +291,7 @@ function clearEditor() {
 
 function saveInBrowser() {
     var text = editor.getValue();
-    if (localStorage.getItem('content')) {
-        swal({
-                title: "Existing Data Detected",
-                text: "You will overwrite the data previously saved!",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, overwrite!",
-                closeOnConfirm: false
-            },
-            function() {
-                localStorage.setItem('content', text);
-                swal("Saved", "Your Document has been saved.", "success");
-            });
-    } else {
-        localStorage.setItem('content', text);
-        swal("Saved", "Your Document has been saved.", "success");
-    }
+    localStorage.setItem('editor.content', text);
     console.log("Saved");
 }
 
@@ -346,8 +358,8 @@ function start() {
                 ))
             );
         }
-    } else if (localStorage.getItem('content')) {
-        editor.setValue(localStorage.getItem('content'));
+    } else if (localStorage.getItem('editor.content')) {
+        editor.setValue(localStorage.getItem('editor.content'));
     }
     update(editor);
     editor.focus();
@@ -355,7 +367,7 @@ function start() {
 }
 
 window.addEventListener("beforeunload", function (e) {
-    if (!editor.getValue() || editor.getValue() == localStorage.getItem('content')) {
+    if (!editor.getValue() || editor.getValue() == localStorage.getItem('editor.content')) {
         return;
     }
     var confirmationMessage = 'It looks like you have been editing something. '
